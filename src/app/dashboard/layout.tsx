@@ -21,7 +21,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSeparator,
+  SidebarSeparator,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
@@ -83,7 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarMenuSeparator />
+        <SidebarSeparator />
         <SidebarMenu>
             <SidebarMenuItem>
                 <Link href="/dashboard/profile">
