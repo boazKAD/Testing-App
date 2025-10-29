@@ -4,6 +4,7 @@ export type User = {
   email: string;
   avatarUrl: string;
   joined: string;
+  savingsGoal?: number;
 };
 
 export type Savings = {
@@ -32,6 +33,7 @@ export const user: User = {
   email: 'jane.doe@example.com',
   avatarUrl: 'https://picsum.photos/seed/avatar1/100/100',
   joined: '2023-01-15',
+  savingsGoal: 5000,
 };
 
 export const savings: Savings = {
