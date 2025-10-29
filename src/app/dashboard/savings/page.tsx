@@ -16,17 +16,62 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { savings, transactions } from "@/lib/data";
-import { Landmark, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { Landmark, ArrowDownToLine, ArrowUpFromLine, Loader2 } from "lucide-react";
 import { TransactionTable } from "@/components/transaction-table";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+
+const savingsActionSchema = z.object({
+  amount: z.coerce.number().positive({ message: 'Please enter a positive amount.' }),
+});
+
+type SavingsActionType = 'deposit' | 'withdraw';
 
 export default function SavingsPage() {
+  const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState<{ open: boolean; type: SavingsActionType | null }>({ open: false, type: null });
+
   const savingsTransactions = transactions.filter(
     (t) => t.type === 'deposit' || t.type === 'withdrawal'
   );
+
+  const form = useForm<z.infer<typeof savingsActionSchema>>({
+    resolver: zodResolver(savingsActionSchema),
+    defaultValues: {
+      amount: 0,
+    },
+  });
+
+  const { formState: { isSubmitting } } = form;
+
+  function onSubmit(values: z.infer<typeof savingsActionSchema>) {
+    console.log({ ...values, type: dialogOpen.type });
+    // Simulate API call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        toast({
+          title: `${dialogOpen.type === 'deposit' ? 'Deposit' : 'Withdrawal'} Successful`,
+          description: `Your transaction has been processed.`,
+        });
+        setDialogOpen({ open: false, type: null });
+        form.reset();
+        resolve(null);
+      }, 1500);
+    });
+  }
+
+  const openDialog = (type: SavingsActionType) => {
+    form.reset();
+    setDialogOpen({ open: true, type });
+  };
 
   return (
     <div className="space-y-6">
@@ -37,50 +82,8 @@ export default function SavingsPage() {
             <CardDescription>Deposit, withdraw, and track your savings.</CardDescription>
           </div>
           <div className="flex gap-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button><ArrowDownToLine className="mr-2 h-4 w-4" />Deposit</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Make a Deposit</DialogTitle>
-                  <DialogDescription>
-                    Enter the amount you'd like to deposit into your savings account.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="amount" className="text-right">Amount</Label>
-                    <Input id="amount" defaultValue="$100.00" className="col-span-3" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit">Confirm Deposit</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="secondary"><ArrowUpFromLine className="mr-2 h-4 w-4" />Withdraw</Button>
-              </DialogTrigger>
-               <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Make a Withdrawal</DialogTitle>
-                  <DialogDescription>
-                    Enter the amount you'd like to withdraw from your savings.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="amount" className="text-right">Amount</Label>
-                    <Input id="amount" defaultValue="$50.00" className="col-span-3" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" variant="secondary">Confirm Withdrawal</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => openDialog('deposit')}><ArrowDownToLine className="mr-2 h-4 w-4" />Deposit</Button>
+            <Button onClick={() => openDialog('withdraw')} variant="secondary"><ArrowUpFromLine className="mr-2 h-4 w-4" />Withdraw</Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -95,6 +98,45 @@ export default function SavingsPage() {
           </div>
         </CardContent>
       </Card>
+      
+      <Dialog open={dialogOpen.open} onOpenChange={(open) => setDialogOpen({ open, type: dialogOpen.type })}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Make a {dialogOpen.type === 'deposit' ? 'Deposit' : 'Withdrawal'}</DialogTitle>
+            <DialogDescription>
+              Enter the amount you'd like to {dialogOpen.type}.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="$100.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                 <DialogClose asChild>
+                    <Button type="button" variant="secondary" disabled={isSubmitting}>
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Confirm {dialogOpen.type === 'deposit' ? 'Deposit' : 'Withdrawal'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
       
       <Card>
         <CardHeader>

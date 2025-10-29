@@ -48,9 +48,10 @@ export function RegisterForm() {
       setIsLoading(false);
       toast({
         title: "Account Created!",
-        description: "You have been successfully registered. Please sign in.",
+        description: "Welcome to Credit Jambo! Let's get you set up.",
       });
-      router.push('/');
+      // Redirect to onboarding after successful registration
+      router.push('/onboarding/step-1');
     }, 1500);
   }
 
